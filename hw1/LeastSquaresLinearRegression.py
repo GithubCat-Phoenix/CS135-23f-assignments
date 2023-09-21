@@ -42,7 +42,8 @@ class LeastSquaresLinearRegressor(object):
         Should do nothing. Attributes are only set after calling 'fit'.
         '''
         # Leave this alone
-        pass
+        self.w_F = None  # 存储每个特征的权重的向量
+        self.b = None  # 存储偏置项的标量
 
     def fit(self, x_NF, y_N):
         ''' Compute and store weights that solve least-squares problem.
@@ -77,8 +78,17 @@ class LeastSquaresLinearRegressor(object):
         N, F = x_NF.shape
         
         # Hint: Use np.linalg.solve
-        # Using np.linalg.inv may cause issues (see day03 lab) 
-        pass # TODO fixme
+        # Using np.linalg.inv may cause issues (see day03 lab)
+        # 为了考虑偏置项，将一个全为1的列添加到 x_NF 中
+        x_NF = np.column_stack((x_NF, np.ones(N)))
+
+        # 使用 np.linalg.solve 计算权重 w_F 和偏置项 b
+        XTX = np.dot(x_NF.T, x_NF)
+        XTY = np.dot(x_NF.T, y_N)
+        res = np.linalg.solve(XTX, XTY)
+        self.w_F = res
+        self.b = res[-1]
+
 
 
     def predict(self, x_MF):
@@ -96,7 +106,14 @@ class LeastSquaresLinearRegressor(object):
             Each value is the predicted scalar for one example
         '''
         # TODO FIX ME
-        return np.asarray([0.0])
+        M = x_MF.shape[0]
+
+        # 为了考虑偏置项，将一个全为1的列添加到 x_MF 中
+        x_MF = np.column_stack((x_MF, np.ones(M)))
+
+        # 使用计算得到的权重和偏置项进行预测
+        yhat_M = np.dot(x_MF, self.w_F) + self.b
+        return yhat_M
 
 
 

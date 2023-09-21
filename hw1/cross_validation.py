@@ -55,14 +55,31 @@ def train_models_and_calc_scores_for_n_fold_cv(
     >>> np.array2string(te_K, precision=8, suppress_small=True)
     '[0. 0. 0. 0. 0. 0. 0.]'
     '''
-    train_error_per_fold = np.zeros(2, dtype=np.int32)
-    test_error_per_fold = np.zeros(2, dtype=np.int32)
+    train_error_per_fold = np.zeros(n_folds, dtype=np.int32)
+    test_error_per_fold = np.zeros(n_folds, dtype=np.int32)
 
     # TODO define the folds here by calling your function
     # e.g. ... = make_train_and_test_row_ids_for_n_fold_cv(...)
+    train_ids_per_fold, test_ids_per_fold = make_train_and_test_row_ids_for_n_fold_cv(
+        n_examples=len(y_N), n_folds=n_folds, random_state=random_state)
 
     # TODO loop over folds and compute the train and test error
     # for the provided estimator
+    for fold in range(n_folds):
+        x_train = x_NF[train_ids_per_fold[fold]]
+        y_train = y_N[train_ids_per_fold[fold]]
+        x_test = x_NF[test_ids_per_fold[fold]]
+        y_test = y_N[test_ids_per_fold[fold]]
+
+        estimator.fit(x_train, y_train)
+        y_train_pred = estimator.predict(x_train)
+        y_test_pred = estimator.predict(x_test)
+
+        train_error = calc_root_mean_squared_error(y_train, y_train_pred)
+        test_error = calc_root_mean_squared_error(y_test, y_test_pred)
+
+        train_error_per_fold[fold] = train_error
+        test_error_per_fold[fold] = test_error
 
     return train_error_per_fold, test_error_per_fold
 
@@ -130,6 +147,7 @@ def make_train_and_test_row_ids_for_n_fold_cv(
     if hasattr(random_state, 'rand'):
         # Handle case where provided random_state is a random generator
         # (e.g. has methods rand() and randn())
+        # 处理随机数生成器为 random_state 的情况
         random_state = random_state # just remind us we use the passed-in value
     else:
         # Handle case where we pass "seed" for a PRNG as an integer
@@ -137,10 +155,35 @@ def make_train_and_test_row_ids_for_n_fold_cv(
 
     # TODO obtain a shuffled order of the n_examples
 
+    # 随机排列行索引以进行随机化
+    shuffled_indices = random_state.permutation(n_examples)
+
     train_ids_per_fold = list()
     test_ids_per_fold = list()
     
     # TODO establish the row ids that belong to each fold's
     # train subset and test subset
+
+    # 计算每个折叠的测试集大小（近似相等）
+    fold_size = n_examples // n_folds
+    remainder = n_examples % n_folds
+
+    start = 0
+    for fold in range(n_folds):
+        end = start + fold_size
+        if fold < remainder:
+            end += 1  # 处理多余的示例
+
+        # 测试集是从 start 到 end 的行索引
+        test_ids = shuffled_indices[start:end]
+
+        # 训练集是除了测试集之外的所有其他索引
+        train_ids = np.concatenate([shuffled_indices[:start], shuffled_indices[end:]])
+
+        train_ids_per_fold.append(train_ids)
+        test_ids_per_fold.append(test_ids)
+
+        # 更新起始位置
+        start = end
 
     return train_ids_per_fold, test_ids_per_fold

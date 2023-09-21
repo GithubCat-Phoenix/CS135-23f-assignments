@@ -37,5 +37,11 @@ def calc_root_mean_squared_error(y_N, yhat_N):
     yhat_N = np.atleast_1d(yhat_N)
     assert y_N.ndim == 1
     assert y_N.shape == yhat_N.shape
-    return 0.0  # TODO fixme
+    # 计算真实值和预测值之间的平方差
+    squared_errors = (y_N - yhat_N) ** 2
+
+    # 计算平方差的均值并取平方根
+    rmse = np.sqrt(np.mean(squared_errors))
+
+    return rmse
 
