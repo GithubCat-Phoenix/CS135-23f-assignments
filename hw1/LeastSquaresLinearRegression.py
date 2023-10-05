@@ -21,6 +21,8 @@ Test Case
 '''
 
 import numpy as np
+
+
 # No other imports allowed!
 
 class LeastSquaresLinearRegressor(object):
@@ -35,15 +37,15 @@ class LeastSquaresLinearRegressor(object):
     * self.b : float
         scalar real-valued bias or "intercept"
     '''
-
+    # w_F = None
+    # b = None
     def __init__(self):
         ''' Constructor of an sklearn-like regressor
 
         Should do nothing. Attributes are only set after calling 'fit'.
         '''
+
         # Leave this alone
-        self.w_F = None  # 存储每个特征的权重的向量
-        self.b = None  # 存储偏置项的标量
 
     def fit(self, x_NF, y_N):
         ''' Compute and store weights that solve least-squares problem.
@@ -74,9 +76,9 @@ class LeastSquaresLinearRegressor(object):
         .. math:
             \min_{w \in \mathbb{R}^F, b \in \mathbb{R}}
                 \sum_{n=1}^N (y_n - b - \sum_f x_{nf} w_f)^2
-        '''      
+        '''
         N, F = x_NF.shape
-        
+
         # Hint: Use np.linalg.solve
         # Using np.linalg.inv may cause issues (see day03 lab)
         # 为了考虑偏置项，将一个全为1的列添加到 x_NF 中
@@ -86,10 +88,8 @@ class LeastSquaresLinearRegressor(object):
         XTX = np.dot(x_NF.T, x_NF)
         XTY = np.dot(x_NF.T, y_N)
         res = np.linalg.solve(XTX, XTY)
-        self.w_F = res
+        self.w_F = res[:-1]
         self.b = res[-1]
-
-
 
     def predict(self, x_MF):
         ''' Make predictions given input features for M examples
@@ -106,16 +106,15 @@ class LeastSquaresLinearRegressor(object):
             Each value is the predicted scalar for one example
         '''
         # TODO FIX ME
-        M = x_MF.shape[0]
+        # M = x_MF.shape[0]
 
-        # 为了考虑偏置项，将一个全为1的列添加到 x_MF 中
-        x_MF = np.column_stack((x_MF, np.ones(M)))
+        # # 为了考虑偏置项，将一个全为1的列添加到 x_MF 中
+        # x_MF = np.column_stack((x_MF, np.ones(M)))
 
         # 使用计算得到的权重和偏置项进行预测
+        # yhat_M = np.dot(x_MF, self.res)
         yhat_M = np.dot(x_MF, self.w_F) + self.b
         return yhat_M
-
-
 
 
 def test_on_toy_data(N=100):
@@ -136,7 +135,7 @@ def test_on_toy_data(N=100):
 
     yhat_N = linear_regr.predict(x_NF)
 
-    np.set_printoptions(precision=3, formatter={'float':lambda x: '% .3f' % x})
+    np.set_printoptions(precision=3, formatter={'float': lambda x: '% .3f' % x})
 
     print("True weights")
     print(true_w_F)
@@ -147,6 +146,7 @@ def test_on_toy_data(N=100):
     print(np.asarray([true_b]))
     print("Estimated intercept")
     print(np.asarray([linear_regr.b]))
+
 
 if __name__ == '__main__':
     test_on_toy_data()
